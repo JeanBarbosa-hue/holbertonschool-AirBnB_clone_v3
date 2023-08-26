@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 """Server file"""
-from flask import Flask
-import models
 from api.v1.views import app_views
+from flask import Flask
+from models import storage
+"""Status route on app_views"""
 
 app = Flask(__name__)
 
