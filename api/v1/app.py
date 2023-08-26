@@ -1,36 +1,33 @@
 #!/usr/bin/python3
-"""Script for starting API server"""
+"""Server file"""
 
-
-from models.storage import storage
-from api.v1.views import app_views
-from os import environ
+import os
 from flask import Flask, jsonify
+import models
+from models import storage
+from apps.v1.views import app_views
 
 
-app = Flask(__name__)
+def create_app(config_name):
+    app = Flask(__name__)
 
-app.register_blueprint(app_views)
+    app.config.from_object(config_name)
 
+    app.register_blueprint(app_views)
 
-@app.teardown_appcontext
-def close_db(error):
-    """Close storage"""
-    storage.close()
+    @app.teardown_appcontext
+    def close_db(error):
+        storage.close()
 
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({"error": "Not found"}), 404
 
-@app.errorhandler(404)
-def not_found(error):
-    """404 error"""
-    return jsonify(error="Not found"), 404
+    return app
 
+    app = create_app(os.getenv('APP_CONFIG', 'default'))
 
 if __name__ == "__main__":
-    """Main"""
-    host = environ.get('HBNB_API_HOST')
-    port = environ.get('HBNB_API_PORT')
-    if not host:
-        host = '0.0.0.0'
-    if not port:
-        port = '5000'
-    app.run(host=host, port=port, thread=True)
+    host = os.getenv('HBNB_API_HOST', '0.0.0.0')
+    port = int(os.getenv('HBNB_API_PORT', 5000))
+    app.run(host=host, port=port, threaded=True)
