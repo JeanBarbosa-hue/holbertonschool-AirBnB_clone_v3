@@ -2,6 +2,8 @@
 """Contains the API blueprint"""
 
 # Import the necessary modules
+from api.v1.views.cities import *
+from api.v1.views.index import *
 from flask import Blueprint
 
 # Create the blueprint instance
