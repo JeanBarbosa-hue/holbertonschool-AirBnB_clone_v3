@@ -1,24 +1,40 @@
 #!/usr/bin/python3
 """Server file"""
-from flask import Flask
+import os
+from flask import Flask, jsonify
+from flask_cors import CORS
 from models import storage
 from api.v1.views import app_views
 
 app = Flask(__name__)
 
+app_host = os.getenv('HBNB_API_HOST', '0.0.0.0')
+app_port = int(os.getenv('HBNB_API_PORT', '5000'))
+
+app.url_map.strict_slashes = False
+
 app.register_blueprint(app_views)
+
+CORS(app, resources={r"/*": {"origin": app_host}})
 
 
 @app.teardown_appcontext
-def close_db(error):
+def teardown_flask(exception):
     storage.close()
 
 
+@app.errorhandler(404)
+def error_404(error):
+    return jsonify(error='Not Found'), 404
+
+
+@app.errorhandler(400)
+def error_400(error):
+    msg = 'bad request'
+    if isinstance(error, Exception) and hasattr(error, 'description'):
+        msg = error.description
+    return jsonify(error=msg), 400
+
+
 if __name__ == "__main__":
-    app.run(host=os.getenv('HBNB_API_HOST', '0.0.0.0'),
-            port=int(os.getenv('HBNB_API_PORT', 5000)),
-            threaded=True)
-
-app = Flask(__name__)
-
-app.register_blueprint(app_views)
+    app.run(host=app_host, port=app_port, threaded=True)
